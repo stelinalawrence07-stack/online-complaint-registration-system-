@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Registration & Complaint Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <!-- Header Navigation -->
+    <nav class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid me-2 fa-shield-halved text-2xl text-indigo-400"></i>
+                    <span class="font-bold text-xl tracking-wide">PublicGrievance Portal</span>
+                </div>
+                
+                <!-- Desktop Navigation Links -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <button onclick="switchTab('dashboard')" class="nav-btn font-medium hover:text-indigo-300 transition" id="nav-dashboard">Dashboard</button>
+                    <button onclick="switchTab('lodge')" class="nav-btn font-medium hover:text-indigo-300 transition" id="nav-lodge">Lodge Complaint</button>
+                    <button onclick="switchTab('track')" class="nav-btn font-medium hover:text-indigo-300 transition" id="nav-track">Track Complaint</button>
+                    <button onclick="switchTab('public')" class="nav-btn font-medium hover:text-indigo-300 transition" id="nav-public">Public Board</button>
+                </div>
+
+                <!-- Admin Mode Toggle Switch -->
+                <div class="flex items-center space-x-2 bg-indigo-950 px-3 py-1.5 rounded-full border border-indigo-700">
+                    <span class="text-xs font-semibold uppercase text-indigo-200">Admin Mode</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="adminToggle" onchange="toggleAdminMode()" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Notification Banner -->
+        <div id="toastNotification" class="hidden mb-6 p-4 rounded-lg border shadow-sm flex items-center justify-between transition-all duration-300">
+            <div class="flex items-center space-x-3">
+                <i id="toastIcon" class="fa-solid text-xl"></i>
+                <span id="toastMessage" class="font-medium"></span>
+            </div>
+            <button onclick="closeToast()" class="text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="tab-content">
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">System Dashboard Overview</h1>
+                <p class="text-gray-600 text-sm">Real-time stats and overall complaint processing analytics.</p>
+            </div>
+
+            <!-- Stats Metric Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 uppercase">Total Filed</p>
+                        <h3 class="text-3xl font-extrabold text-gray-900 mt-1" id="stat-total">0</h3>
+                    </div>
+                    <div class="p-4 bg-indigo-50 text-indigo-600 rounded-full">
+                        <i class="fa-solid fa-folder-open text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 uppercase">Pending</p>
+                        <h3 class="text-3xl font-extrabold text-amber-600 mt-1" id="stat-pending">0</h3>
+                    </div>
+                    <div class="p-4 bg-amber-50 text-amber-600 rounded-full">
+                        <i class="fa-solid fa-clock text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 uppercase">In Progress</p>
+                        <h3 class="text-3xl font-extrabold text-blue-600 mt-1" id="stat-progress">0</h3>
+                    </div>
+                    <div class="p-4 bg-blue-50 text-blue-600 rounded-full">
+                        <i class="fa-solid fa-spinner text-2xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-500 uppercase">Resolved</p>
+                        <h3 class="text-3xl font-extrabold text-emerald-600 mt-1" id="stat-resolved">0</h3>
+                    </div>
+                    <div class="p-4 bg-emerald-50 text-emerald-600 rounded-full">
+                        <i class="fa-solid fa-circle-check text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Breakdown & Analytics Bars -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-1">
+                    <h2 class="text-lg font-bold text-gray-900 mb-4">Complaints by Category</h2>
+                    <div id="category-bars-container" class="space-y-4">
+                        <!-- Rendered via JS dynamically -->
+                    </div>
+                </div>
+
+                <!-- Quick Action Feed / Recent Submissions -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold text-gray-900">Recent Complaints</h2>
+                        <button onclick="switchTab('public')" class="text-sm text-indigo-600 font-semibold hover:underline">View All &rarr;</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-500 uppercase text-xs border-b">
+                                <tr>
+                                    <th class="py-3 px-4">Tracking ID</th>
+                                    <th class="py-3 px-4">Category</th>
+                                    <th class="py-3 px-4">Priority</th>
+                                    <th class="py-3 px-4">Status</th>
+                                    <th class="py-3 px-4">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-recent-table" class="divide-y divide-gray-100">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 2. LODGE COMPLAINT FORM VIEW -->
+        <section id="view-lodge" class="tab-content hidden max-w-3xl mx-auto">
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <div class="border-b pb-4 mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Lodge a New Complaint</h1>
+                    <p class="text-gray-600 text-sm">Fill out the official details below to register your grievance into the public tracker.</p>
+                </div>
+
+                <form id="complaintForm" onsubmit="submitComplaint(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name *</label>
+                            <input type="text" id="complainantName" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address *</label>
+                            <input type="email" id="complainantEmail" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="john@example.com">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="complainantPhone" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="+1 (555) 000-0000">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
+                            <select id="complaintCategory" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="">Select Category</option>
+                                <option value="Public Infrastructure">Public Infrastructure & Roads</option>
+                                <option value="Sanitation & Waste">Sanitation & Waste Management</option>
+                                <option value="Electricity & Utilities">Electricity & Power Supply</option>
+                                <option value="Water Supply">Water Supply & Sewage</option>
+                                <option value="Cyber / Privacy">Cyber / Privacy Concerns</option>
+                                <option value="General Admin">General Administration</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Priority Level *</label>
+                            <select id="complaintPriority" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="Low">Low Priority</option>
+                                <option value="Medium" selected>Medium Priority</option>
+                                <option value="High">High Priority</option>
+                                <option value="Urgent">Urgent / Emergency</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Location / District *</label>
+                            <input type="text" id="complaintLocation" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., Downtown Sector 4">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Complaint Subject / Short Description *</label>
+                        <input type="text" id="complaintTitle" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Brief subject line of the issue">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Detailed Explanation *</label>
+                        <textarea id="complaintDetails" rows="4" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Provide complete information regarding location, dates, or relevant background details..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Upload Supporting Evidence / Attachment (Optional)</label>
+                        <input type="file" id="complaintFile" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
+
+                    <div class="flex justify-end space-x-4 pt-4 border-t">
+                        <button type="reset" class="px-6 py-2.5 border rounded-lg text-gray-600 hover:bg-gray-100 font-medium transition">Clear Form</button>
+                        <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow transition">Submit Complaint</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+
+        <!-- 3. TRACK COMPLAINT PORTAL VIEW -->
+        <section id="view-track" class="tab-content hidden max-w-4xl mx-auto">
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-8">
+                <h1 class="text-2xl font-bold text-gray-900 mb-2">Track Complaint Status</h1>
+                <p class="text-gray-600 text-sm mb-6">Enter your unique Tracking ID or registered Email address to view live progress logs.</p>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="trackInput" class="flex-grow px-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base" placeholder="Enter Tracking ID (e.g. GRV-839201) or Email">
+                    <button onclick="performTrackingSearch()" class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition shadow">Search</button>
+                </div>
+            </div>
+
+            <!-- Search Result Container -->
+            <div id="trackingResultContainer" class="hidden bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-start border-b pb-4 mb-6">
+                    <div>
+                        <span class="text-xs uppercase font-bold text-indigo-600 tracking-wider">Tracking Reference</span>
+                        <h2 class="text-2xl font-extrabold text-gray-900" id="trackResultID">GRV-000000</h2>
+                        <p class="text-gray-500 text-sm mt-1" id="trackResultTitle">Title Here</p>
+                    </div>
+                    <span id="trackResultStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold uppercase">Pending</span>
+                </div>
+
+                <!-- Stepper Timeline Visualizer -->
+                <div class="my-8">
+                    <h3 class="text-sm font-bold text-gray-700 uppercase mb-4">Progress Stepper</h3>
+                    <div class="grid grid-cols-5 text-center text-xs font-semibold text-gray-500 border-b pb-4 relative" id="stepperContainer">
+                        <!-- Dynamically filled via JS -->
+                    </div>
+                </div>
+
+                <!-- Complaint Details Info Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6 text-sm">
+                    <div>
+                        <span class="font-bold text-gray-600">Category:</span> <span id="trackResultCategory">--</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-600">Priority Level:</span> <span id="trackResultPriority">--</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-600">Location:</span> <span id="trackResultLocation">--</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-600">Filing Date:</span> <span id="trackResultDate">--</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-600">Assigned Department:</span> <span id="trackResultDept">--</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-600">Assigned Officer:</span> <span id="trackResultAgent">--</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-gray-800 text-sm mb-2">Original Complaint Description:</h4>
+                    <p class="text-gray-600 text-sm p-4 bg-gray-50 rounded border" id="trackResultDetails">--</p>
+                </div>
+
+                <div class="mt-6">
+                    <h4 class="font-bold text-gray-800 text-sm mb-2">Official Resolution & Audit Logs:</h4>
+                    <div id="trackResultAuditLogs" class="space-y-3">
+                        <!-- Dynamic logs -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 4. PUBLIC COMPLAINT BOARD VIEW -->
+        <section id="view-public" class="tab-content hidden">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Public Grievance Repository</h1>
+                    <p class="text-gray-600 text-sm">Search and inspect verified public complaints and administrative resolutions.</p>
+                </div>
+
+                <!-- Filters & Search Toolbar -->
+                <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                    <input type="text" id="publicSearchInput" onkeyup="filterPublicBoard()" placeholder="Search keywords..." class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <select id="publicFilterCategory" onchange="filterPublicBoard()" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="ALL">All Categories</option>
+                        <option value="Public Infrastructure">Infrastructure</option>
+                        <option value="Sanitation & Waste">Sanitation</option>
+                        <option value="Electricity & Utilities">Electricity</option>
+                        <option value="Water Supply">Water Supply</option>
+                        <option value="Cyber / Privacy">Cyber/Privacy</option>
+                        <option value="General Admin">General Admin</option>
+                    </select>
+                    <select id="publicFilterStatus" onchange="filterPublicBoard()" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="ALL">All Statuses</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Public Board Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-semibold">
+                            <tr>
+                                <th class="py-3 px-4">Tracking ID</th>
+                                <th class="py-3 px-4">Title / Issue</th>
+                                <th class="py-3 px-4">Category</th>
+                                <th class="py-3 px-4">Location</th>
+                                <th class="py-3 px-4">Priority</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="publicBoardTableBody" class="divide-y divide-gray-200">
+                            <!-- Dynamic Public Items -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ADMIN UPDATE MODAL (Visible only when managing in Admin Mode) -->
+    <div id="adminModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h3 class="font-bold text-lg text-gray-900">Admin Action: Update Complaint</h3>
+                <button onclick="closeAdminModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            
+            <form id="adminUpdateForm" onsubmit="saveAdminUpdate(event)" class="space-y-4 text-sm">
+                <input type="hidden" id="adminModalID">
+
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Current Complaint ID</label>
+                    <input type="text" id="adminModalDisplayID" disabled class="w-full px-3 py-2 bg-gray-100 border rounded">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Update Status *</label>
+                    <select id="adminModalStatus" required class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                        <option value="Submitted">Submitted</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Assigned">Assigned</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Assign Department</label>
+                        <input type="text" id="adminModalDept" placeholder="e.g. Public Works Dept" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-gray-700 mb-1">Assign Officer/Agent</label>
+                        <input type="text" id="adminModalAgent" placeholder="Officer Name" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-1">Official Resolution / Audit Log Entry *</label>
+                    <textarea id="adminModalNote" rows="3" required placeholder="Describe progress action, resolution steps, or reason for rejection..." class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3 border-t pt-4">
+                    <button type="button" onclick="closeAdminModal()" class="px-4 py-2 border rounded hover:bg-gray-100">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded font-semibold hover:bg-indigo-700">Save Updates</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC & STATE MANAGEMENT -->
+    <script>
+        // Sample Initial Mock Data
+        const initialComplaints = [
+            {
+                id: "GRV-849102",
+                name: "Anand Kumar",
+                email: "anand@example.com",
+                phone: "+91 98765 43210",
+                category: "Public Infrastructure",
+                priority: "High",
+                location: "Main Street, Sector 3",
+                title: "Deep Pothole causing traffic hazard",
+                details: "Large open pothole right near the central junction causing severe bike accidents at night.",
+                status: "In Progress",
+                date: "2026-10-28",
+                department: "Municipal Civil Works",
+                agent: "Inspector R. Sharma",
+                logs: [
+                    { date: "2026-10-28", note: "Complaint filed into system." },
+                    { date: "2026-10-29", note: "Inspection team dispatched to site." }
+                ]
+            },
+            {
+                id: "GRV-730192",
+                name: "Priya Sundaram",
+                email: "priya@example.com",
+                phone: "+91 91234 56789",
+                category: "Water Supply",
+                priority: "Urgent",
+                location: "North Block Apartments",
+                title: "Contaminated tap water supply",
+                details: "Muddy water pipeline leakage affecting entire block residential taps for 2 days.",
+                status: "Resolved",
+                date: "2026-10-25",
+                department: "Water & Sewage Board",
+                agent: "Engineer K. Varma",
+                logs: [
+                    { date: "2026-10-25", note: "Complaint logged." },
+                    { date: "2026-10-26", note: "Pipeline leak identified and repaired." },
+                    { date: "2026-10-27", note: "Water quality tested and cleared. Marked Resolved." }
+                ]
+            },
+            {
+                id: "GRV-920145",
+                name: "Michael Chen",
+                email: "m.chen@example.com",
+                phone: "+1 415 555 0192",
+                category: "Sanitation & Waste",
+                priority: "Medium",
+                location: "West Market Plaza",
+                title: "Uncollected garbage bin overflow",
+                details: "Waste containers have not been emptied for 4 days creating foul smell.",
+                status: "Submitted",
+                date: "2026-10-31",
+                department: "Unassigned",
+                agent: "Unassigned",
+                logs: [
+                    { date: "2026-10-31", note: "Submitted online by citizen." }
+                ]
+            }
+        ];
+
+        // Global State
+        let complaints = JSON.parse(localStorage.getItem('app_complaints')) || initialComplaints;
+        let isAdminMode = false;
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            saveState();
+            renderDashboard();
+            renderPublicBoard();
+            switchTab('dashboard');
+        });
+
+        function saveState() {
+            localStorage.setItem('app_complaints', JSON.stringify(complaints));
+        }
+
+        // Tab Switch Navigation Handler
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('text-indigo-300', 'border-b-2', 'border-indigo-400'));
+            
+            const targetView = document.getElementById(`view-${tabName}`);
+            const targetNav = document.getElementById(`nav-${tabName}`);
+
+            if (targetView) targetView.classList.remove('hidden');
+            if (targetNav) targetNav.classList.add('text-indigo-300', 'border-b-2', 'border-indigo-400');
+
+            if(tabName === 'dashboard') renderDashboard();
+            if(tabName === 'public') renderPublicBoard();
+        }
+
+        // Admin Toggle Handler
+        function toggleAdminMode() {
+            isAdminMode = document.getElementById('adminToggle').checked;
+            showToast(
+                isAdminMode ? 'Admin Mode Activated! You can now update complaints.' : 'Exited Admin Mode.',
+                isAdminMode ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300',
+                isAdminMode ? 'fa-user-shield' : 'fa-user'
+            );
+            renderPublicBoard();
+        }
+
+        // Toast Notification System
+        function showToast(message, colorClasses = 'bg-emerald-100 text-emerald-800 border-emerald-300', icon = 'fa-circle-check') {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toast.className = `p-4 rounded-lg border shadow-sm flex items-center justify-between transition-all duration-300 ${colorClasses}`;
+            toastMsg.innerText = message;
+            toastIcon.className = `fa-solid ${icon} text-xl`;
+
+            toast.classList.remove('hidden');
+            setTimeout(() => { closeToast(); }, 4000);
+        }
+
+        function closeToast() {
+            document.getElementById('toastNotification').classList.add('hidden');
+        }
+
+        // Submit New Complaint Handler
+        function submitComplaint(event) {
+            event.preventDefault();
+
+            const newId = "GRV-" + Math.floor(100000 + Math.random() * 900000);
+            const today = new Date().toISOString().split('T')[0];
+
+            const newRecord = {
+                id: newId,
+                name: document.getElementById('complainantName').value,
+                email: document.getElementById('complainantEmail').value,
+                phone: document.getElementById('complainantPhone').value || 'N/A',
+                category: document.getElementById('complaintCategory').value,
+                priority: document.getElementById('complaintPriority').value,
+                location: document.getElementById('complaintLocation').value,
+                title: document.getElementById('complaintTitle').value,
+                details: document.getElementById('complaintDetails').value,
+                status: "Submitted",
+                date: today,
+                department: "Pending Assignment",
+                agent: "Unassigned",
+                logs: [
+                    { date: today, note: "Grievance submitted successfully by citizen." }
+                ]
+            };
+
+            complaints.unshift(newRecord);
+            saveState();
+
+            document.getElementById('complaintForm').reset();
+            showToast(`Complaint filed successfully! Tracking ID: ${newId}`, 'bg-emerald-100 text-emerald-800 border-emerald-300', 'fa-circle-check');
+
+            // Automatically transition to Track tab
+            document.getElementById('trackInput').value = newId;
+            switchTab('track');
+            performTrackingSearch();
+        }
+
+        // Dashboard Rendering Logic
+        function renderDashboard() {
+            // Metrics
+            const total = complaints.length;
+            const pending = complaints.filter(c => c.status === 'Submitted' || c.status === 'Under Review').length;
+            const progress = complaints.filter(c => c.status === 'Assigned' || c.status === 'In Progress').length;
+            const resolved = complaints.filter(c => c.status === 'Resolved').length;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-progress').innerText = progress;
+            document.getElementById('stat-resolved').innerText = resolved;
+
+            // Category Breakdown Chart Bars
+            const categories = ["Public Infrastructure", "Sanitation & Waste", "Electricity & Utilities", "Water Supply", "Cyber / Privacy", "General Admin"];
+            const catContainer = document.getElementById('category-bars-container');
+            catContainer.innerHTML = '';
+
+            categories.forEach(cat => {
+                const count = complaints.filter(c => c.category === cat).length;
+                const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
+
+                catContainer.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-xs font-semibold mb-1">
+                            <span class="text-gray-700">${cat}</span>
+                            <span class="text-gray-500">${count} (${percentage}%)</span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2">
+                            <div class="bg-indigo-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Recent Items Table
+            const recentTable = document.getElementById('dashboard-recent-table');
+            recentTable.innerHTML = '';
+
+            complaints.slice(0, 5).forEach(item => {
+                recentTable.innerHTML += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-4 font-mono font-bold text-indigo-600">${item.id}</td>
+                        <td class="py-3 px-4">${item.category}</td>
+                        <td class="py-3 px-4">${getPriorityBadge(item.priority)}</td>
+                        <td class="py-3 px-4">${getStatusBadge(item.status)}</td>
+                        <td class="py-3 px-4 text-gray-500 text-xs">${item.date}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Tracking Lookup Functionality
+        function performTrackingSearch() {
+            const query = document.getElementById('trackInput').value.trim().toLowerCase();
+            const resultBox = document.getElementById('trackingResultContainer');
+
+            if (!query) {
+                showToast("Please enter a valid Tracking ID or Email.", "bg-amber-100 text-amber-800 border-amber-300", "fa-triangle-exclamation");
+                return;
+            }
+
+            const match = complaints.find(c => c.id.toLowerCase() === query || c.email.toLowerCase() === query);
+
+            if (!match) {
+                resultBox.classList.add('hidden');
+                showToast("No complaint found matching the provided reference.", "bg-red-100 text-red-800 border-red-300", "fa-circle-xmark");
+                return;
+            }
+
+            // Populate Track View
+            document.getElementById('trackResultID').innerText = match.id;
+            document.getElementById('trackResultTitle').innerText = match.title;
+            document.getElementById('trackResultStatusBadge').className = `px-3 py-1 rounded-full text-xs font-bold uppercase ${getStatusBadgeClass(match.status)}`;
+            document.getElementById('trackResultStatusBadge').innerText = match.status;
+            
+            document.getElementById('trackResultCategory').innerText = match.category;
+            document.getElementById('trackResultPriority').innerText = match.priority;
+            document.getElementById('trackResultLocation').innerText = match.location;
+            document.getElementById('trackResultDate').innerText = match.date;
+            document.getElementById('trackResultDept').innerText = match.department || 'Unassigned';
+            document.getElementById('trackResultAgent').innerText = match.agent || 'Unassigned';
+            document.getElementById('trackResultDetails').innerText = match.details;
+
+            // Build Stepper
+            buildStepper(match.status);
+
+            // Audit Logs
+            const logsContainer = document.getElementById('trackResultAuditLogs');
+            logsContainer.innerHTML = '';
+            match.logs.forEach(log => {
+                logsContainer.innerHTML += `
+                    <div class="p-3 bg-gray-50 rounded border-l-4 border-indigo-500 text-xs">
+                        <span class="font-bold text-gray-700">${log.date}:</span>
+                        <span class="text-gray-600 ml-1">${log.note}</span>
+                    </div>
+                `;
+            });
+
+            resultBox.classList.remove('hidden');
+        }
+
+        // Stepper Visualizer Builder
+        function buildStepper(status) {
+            const steps = ["Submitted", "Under Review", "Assigned", "In Progress", "Resolved"];
+            const stepperContainer = document.getElementById('stepperContainer');
+            stepperContainer.innerHTML = '';
+
+            let currentIndex = steps.indexOf(status);
+            if (status === 'Rejected') currentIndex = -1;
+
+            steps.forEach((step, idx) => {
+                const isComplete = idx <= currentIndex;
+                const isCurrent = idx === currentIndex;
+
+                stepperContainer.innerHTML += `
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold mb-2 ${isComplete ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'} ${isCurrent ? 'ring-4 ring-indigo-200' : ''}">
+                            ${idx + 1}
+                        </div>
+                        <span class="${isComplete ? 'text-indigo-600 font-bold' : 'text-gray-400'}">${step}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // Public Repository Filtering & Table Render
+        function renderPublicBoard() {
+            const tableBody = document.getElementById('publicBoardTableBody');
+            const searchVal = (document.getElementById('publicSearchInput')?.value || '').toLowerCase();
+            const catVal = document.getElementById('publicFilterCategory')?.value || 'ALL';
+            const statusVal = document.getElementById('publicFilterStatus')?.value || 'ALL';
+
+            tableBody.innerHTML = '';
+
+            const filtered = complaints.filter(item => {
+                const matchesSearch = item.id.toLowerCase().includes(searchVal) ||
+                                      item.title.toLowerCase().includes(searchVal) ||
+                                      item.location.toLowerCase().includes(searchVal);
+                const matchesCat = catVal === 'ALL' || item.category === catVal;
+                const matchesStatus = statusVal === 'ALL' || item.status === statusVal;
+
+                return matchesSearch && matchesCat && matchesStatus;
+            });
+
+            if(filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-gray-400">No matching records found.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-gray-50 border-b">
+                        <td class="py-3 px-4 font-mono font-bold text-indigo-600">${item.id}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-gray-900">${item.title}</div>
+                            <div class="text-xs text-gray-500">${item.name}</div>
+                        </td>
+                        <td class="py-3 px-4 text-xs">${item.category}</td>
+                        <td class="py-3 px-4 text-xs">${item.location}</td>
+                        <td class="py-3 px-4">${getPriorityBadge(item.priority)}</td>
+                        <td class="py-3 px-4">${getStatusBadge(item.status)}</td>
+                        <td class="py-3 px-4 text-center">
+                            ${isAdminMode ? 
+                                `<button onclick="openAdminModal('${item.id}')" class="px-3 py-1 bg-amber-500 text-white rounded text-xs font-bold hover:bg-amber-600">Update</button>` : 
+                                `<button onclick="quickInspect('${item.id}')" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-bold hover:bg-indigo-100">Inspect</button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterPublicBoard() {
+            renderPublicBoard();
+        }
+
+        function quickInspect(id) {
+            document.getElementById('trackInput').value = id;
+            switchTab('track');
+            performTrackingSearch();
+        }
+
+        // Admin Modal Controls
+        function openAdminModal(id) {
+            const item = complaints.find(c => c.id === id);
+            if (!item) return;
+
+            document.getElementById('adminModalID').value = item.id;
+            document.getElementById('adminModalDisplayID').value = item.id;
+            document.getElementById('adminModalStatus').value = item.status;
+            document.getElementById('adminModalDept').value = item.department || '';
+            document.getElementById('adminModalAgent').value = item.agent || '';
+            document.getElementById('adminModalNote').value = '';
+
+            document.getElementById('adminModal').classList.remove('hidden');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+        }
+
+        function saveAdminUpdate(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('adminModalID').value;
+            const item = complaints.find(c => c.id === id);
+
+            if (item) {
+                const newStatus = document.getElementById('adminModalStatus').value;
+                const newDept = document.getElementById('adminModalDept').value;
+                const newAgent = document.getElementById('adminModalAgent').value;
+                const note = document.getElementById('adminModalNote').value;
+                const today = new Date().toISOString().split('T')[0];
+
+                item.status = newStatus;
+                item.department = newDept || 'General Department';
+                item.agent = newAgent || 'Duty Officer';
+                item.logs.push({
+                    date: today,
+                    note: `[Admin Action - ${newStatus}]: ${note}`
+                });
+
+                saveState();
+                closeAdminModal();
+                renderDashboard();
+                renderPublicBoard();
+                showToast(`Complaint ${id} updated successfully.`, "bg-emerald-100 text-emerald-800 border-emerald-300", "fa-check");
+            }
+        }
+
+        // UI Utility Functions (Badges Formatting)
+        function getStatusBadge(status) {
+            return `<span class="px-2.5 py-1 rounded-full text-xs font-bold ${getStatusBadgeClass(status)}">${status}</span>`;
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Submitted': return 'bg-gray-100 text-gray-800 border border-gray-300';
+                case 'Under Review': return 'bg-amber-100 text-amber-800 border border-amber-300';
+                case 'Assigned': return 'bg-blue-100 text-blue-800 border border-blue-300';
+                case 'In Progress': return 'bg-indigo-100 text-indigo-800 border border-indigo-300';
+                case 'Resolved': return 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+                case 'Rejected': return 'bg-red-100 text-red-800 border border-red-300';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function getPriorityBadge(priority) {
+            switch(priority) {
+                case 'Low': return '<span class="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-600 rounded">Low</span>';
+                case 'Medium': return '<span class="text-xs font-semibold px-2 py-0.5 bg-blue-100 text-blue-700 rounded">Medium</span>';
+                case 'High': return '<span class="text-xs font-semibold px-2 py-0.5 bg-orange-100 text-orange-700 rounded">High</span>';
+                case 'Urgent': return '<span class="text-xs font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded animate-pulse">Urgent</span>';
+                default: return priority;
+            }
+        }
+    </script>
+</body>
+</html>
